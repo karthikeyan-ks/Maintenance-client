@@ -1,5 +1,6 @@
 import { React, useState, useEffect } from "react";
 import { ProgressBar } from "react-bootstrap";
+import { w3cwebsocket } from "websocket";
 import './existing.css'
 
 function Pending() {
@@ -43,7 +44,9 @@ function Pending() {
         }
     ]
     const [datalist, setDataList] = useState(data)
+    const [socket, setSocket] = useState(null)
     useEffect(() => {
+        // Save the WebSocket instance to state
         const dataView1 = datalist.map(element =>
             <div className='list-group-it' key={"1" + element.id}>
                 <div className="container divsep" key={"2" + element.id}>
@@ -57,7 +60,7 @@ function Pending() {
                             <strong> {element.assigned}</strong>
 
                         </div>
-                        <ProgressBar style={{height:"5px"}}  now={80} />
+                        <ProgressBar style={{ height: "5px" }} now={80} />
                         <div>
                             <strong>
                                 {element.assigneddob}
@@ -70,7 +73,6 @@ function Pending() {
         )
         setList(dataView1)
     }, [datalist])
-
     const dataView = datalist.map(element =>
         <div className='list-group-it' key={"1" + element.id}>
             <div className="container divsep" key={"2" + element.id}>
@@ -83,7 +85,7 @@ function Pending() {
                     <div>
                         {element.assigned}
                     </div>
-                    <ProgressBar style={{height:"5px"}} now={80}/>
+                    <ProgressBar style={{ height: "5px" }} now={80} />
 
                     <div>
                         {element.assigneddob}
@@ -91,10 +93,13 @@ function Pending() {
                 </div>
             </div>
         </div >
+       
+        
     )
     const [list, setList] = useState(dataView)
     return (
         <div className="container-fluid">
+            
             <body data-spy="scroll" className='listexisting'>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,400i,700,700i&display=swap"></link>
                 <h3 className=''>Existing activity</h3>

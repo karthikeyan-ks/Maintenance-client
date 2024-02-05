@@ -2,11 +2,73 @@ import { Button, Modal } from "react-bootstrap";
 import React, { useState, useEffect } from "react";
 import './App.css'
 import './Create.css'
+import { useWebSocket } from "./WebSocketContext";
 function Create() {
     const [show, setShow] = useState(false);
-
-    const handleClose = () => setShow(false);
+    const [send, setSend] = useState(false)
+    const [component, setComponent] = useState(<div></div>)
+    const [schedule, setSchedule] = useState([])
+    const [machine, setMachine] = useState([])
+    const handleClose = () => {
+        setShow(false)
+        setSend(true)
+    };
     const handleShow = () => setShow(true);
+    const websocket = useWebSocket()
+    useEffect(() => {
+        if (websocket) {
+            websocket.addEventListener('message', (event) => {
+                var data = JSON.parse(event.data)
+                if (data.page === "create") {
+                    if (data.type === "machine") {
+                        var array = []
+                        for (let key in data) {
+                            let value = data[key].machine_name
+                            if (typeof (value) !== 'undefined')
+                                array.push(<option key={key} value={data[key].machine_id}>{value}</option>)
+                        }
+                        setMachine(array)
+                    } else if (data.type === "component") {
+                        var array = []
+                        for (let key in data) {
+                            let value = data[key].component_name
+                            if (typeof (value) !== 'undefined')
+                                array.push(<option key={key} value={data[key].component_id}>{value}</option>)
+                        }
+                        setComponent(array)
+                    } else if (data.type === "schedule") {
+                        const array = []
+                        for (let key in data) {
+                            let value = data[key].schedule_name
+                            console.log(typeof (value))
+                            if (typeof (value) !== 'undefined') {
+                                console.log(`Key: ${key}, Value: ${value}`);
+                                array.push(<option key={key} value={data[key].schedule_id}>{value}</option>)
+                            }
+                        }
+                        setSchedule(array)
+                        console.log("schedule", schedule, array)
+                    } else if (data.type === "activity") {
+                        console.log(data)
+                    }
+                }
+            })
+            websocket.onopen = (eve) => {
+                websocket.send(JSON.stringify({
+                    query: "component",
+                    page: "create"
+                }))
+                websocket.send(JSON.stringify({
+                    query: "machine",
+                    page: "create"
+                }))
+                websocket.send(JSON.stringify({
+                    query: "schedule",
+                    page: "create"
+                }))
+            }
+        }
+    }, [websocket])
     useEffect(() => {
         if (show) {
             document.getElementById("root").style.background = "grey"
@@ -17,7 +79,30 @@ function Create() {
             document.getElementById("root").style.background = "white"
         }
     }, [show])
+    useEffect(() => {
+        if (send) {
+            let name = document.getElementById("name").value
+            let description = document.getElementById("decription").value
+            let machine = document.getElementById("machine").value
+            let component = document.getElementById("component").value
+            let schedule = document.getElementById("schedule").value
+            let user = document.getElementById("user").value
+            var uploadJson = {
+                page: 'create activity',
+                query: 'insert',
+                name: name,
+                description: description,
+                machine_id: machine,
+                component_id: component,
+                schedule_id: schedule,
+                user: user
+            }
+            console.log(uploadJson)
+            websocket.send(JSON.stringify(uploadJson))
 
+        }
+        setSend(false)
+    }, [send])
     return (
         <div className="container-fluid">
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
@@ -38,16 +123,16 @@ function Create() {
                                 <div className="jumbotron content">
                                     <form className="form-horizontal">
                                         <div className="form-group">
-                                            <label className="control-label col-sm-2" for="email">activity Name :</label>
+                                            <label className="control-label col-sm-2" for="name">activity Name :</label>
                                             <div className="col-sm-10">
-                                                <input type="text" className="form-control" id="email" placeholder="Enter activity name" />
+                                                <input type="text" className="form-control" id="name" placeholder="Enter activity name" />
 
                                             </div>
                                         </div>
                                         <div className="form-group">
-                                            <label className="control-label col-sm-2" for="pwd">activity description :</label>
+                                            <label className="control-label col-sm-2" for="decription">activity description :</label>
                                             <div className="col-sm-10">
-                                                <textarea className="form-control" rows={5} id="pwd" placeholder="enter decription" />
+                                                <textarea className="form-control" rows={5} id="decription" placeholder="enter decription" />
                                             </div>
 
                                         </div>
@@ -59,24 +144,20 @@ function Create() {
                                 <div className="jumbotron content">
                                     <form className="form-horizontal">
                                         <div className="form-group">
-                                            <label className="control-label col-sm-2" for="email">activity machine  :</label>
+                                            <label className="control-label col-sm-2" for="machine">activity machine  :</label>
                                             <div className="col-sm-10">
-                                                <input type="text" className="form-control" id="email" placeholder="enter machine" list="dataset" />
+                                                <input type="text" className="form-control" id="machine" placeholder="enter machine" list="dataset" />
                                                 <datalist id="dataset">
-                                                    <option value={"Machine 1"}></option>
-                                                    <option value={"Machine 2"}></option>
-                                                    <option value={"Machine 3"}></option>
+                                                    {machine}
                                                 </datalist>
                                             </div>
                                         </div>
                                         <div className="form-group">
                                             <label className="control-label col-sm-2" for="pwd">activity component type :</label>
                                             <div className="col-sm-10">
-                                                <input type="text" className="form-control" rows={5} id="pwd" placeholder="enter component" list="dataset1" />
+                                                <input type="text" className="form-control" rows={5} id="component" placeholder="enter component" list="dataset1" />
                                                 <datalist id="dataset1">
-                                                    <option value={"Component 1"}></option>
-                                                    <option value={"Component 2"}></option>
-                                                    <option value={"Component 3"}></option>
+                                                    {component}
                                                 </datalist>
                                             </div>
 
@@ -84,11 +165,9 @@ function Create() {
                                         <div className="form-group">
                                             <label className="control-label col-sm-2" for="pwd">actiivity schedule type :</label>
                                             <div className="col-sm-10">
-                                                <input type="text" className="form-control" rows={5} id="pwd" placeholder="enter schedule type" list="dataset2" />
+                                                <input type="text" className="form-control" rows={5} id="schedule" placeholder="enter schedule type" list="dataset2" />
                                                 <datalist id="dataset2">
-                                                    <option value={"schedule 1"}></option>
-                                                    <option value={"schedule 2"}></option>
-                                                    <option value={"schedule 3"}></option>
+                                                    {schedule}
                                                 </datalist>
                                             </div>
 
@@ -101,9 +180,9 @@ function Create() {
                                 <h3>Activity assign details</h3>
                                 <div className="jumbotron content">
                                     <div className="form-group dropdown">
-                                        <label className="control-label col-sm-2" for="pwd">actiivity schedule type :</label>
+                                        <label className="control-label col-sm-2" for="user">actiivity schedule type :</label>
                                         <div className="col-sm-10 dropdown-content">
-                                            <input type="search" className="form-control" rows={5} id="pwd" placeholder="search user" />
+                                            <input type="search" className="form-control" rows={5} id="user" placeholder="search user" />
                                             <a href="a">a</a>
                                             <a href="a">a</a>
                                             <a href="a">a</a>

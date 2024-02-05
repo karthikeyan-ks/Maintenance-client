@@ -7,19 +7,21 @@ import Issued from './Issued';
 import Pending from './Pending';
 import Review from './Review';
 
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />}>
-          <Route index element={<Create />} />
-          <Route path='/existing' element={<Existing/>}/>
-          <Route path='/issued' element={<Issued/>}/>
-          <Route path='/pending' element={<Pending/>}/>
-          <Route path='/review' element={<Review/>}/>
+          <Route index element={<Create/>} />
+          <Route path='/existing' element={<Existing />} />
+          <Route path='/issued' element={<Issued />} />
+          <Route path='/pending' element={<Pending />} />
+          <Route path='/review' element={<Review />} />
         </Route>
       </Routes>
     </Router>
+
   );
 }
 
